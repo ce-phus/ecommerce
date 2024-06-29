@@ -1,0 +1,51 @@
+{% extends 'core/base.html' %}
+{% block title %}{{ category.title }} | {% endblock %}
+{% block content %}
+    <nav class="flex px-5 py-3 text-gray-700 border border-gray-200 rounded-lg bg-gray-50" aria-label="Breadcrumb">
+        <ol class="inline-flex item-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+            <li class="inline-flex items-center">
+                <a href="{% url 'index' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                    <svg class="w-3 h-3 me-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z"/>
+                      </svg>
+                      Home
+                </a>
+            </li>
+            {% if category.parent %}
+            <li>
+                <div class="flex items-center">
+                    <svg class="rtl:rotate-180 block w-3 h-3 mx-1 text-gray-400 " aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+                      </svg>
+                      <a href="{% url 'category_detail' category.parent.slug %}" class="ms-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ms-2">{{ category.parent.title }}</a>
+                </div>
+            </li>
+            {% endif %}
+            {% if category.parent and category.children.all %}
+                <div class="flex items-center">
+                    <svg class="rtl:rotate-180  w-3 h-3 mx-1 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+                      </svg>
+                      <span class="ms-1 text-sm font-medium text-gray-500 md:ms-2">{{ category.title }}</span>
+                </div>
+            {% endif %}
+        </ol>
+    </nav>
+
+    <h1 class="text-2xl font-bold mb-4">{{ category.title }}</h1>
+
+    {% if category.children.all %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {% for subcategory in category.children.all %}
+                <div class="bg-white p-4 shadow-md rounded-lg">
+                    <h2 class="text-lg font-semibold mb-2">{{ subcategory.title }}</h2>
+                    <a class="text-blue-500 hover:text-blue-700" href="{% url 'category_detail' subcategory.slug %}">View products</a>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        {% with products as list_products %}
+            {% include 'parts/products_list.html' %}
+        {% endwith %}
+    {% endif %}
+{% endblock %}
