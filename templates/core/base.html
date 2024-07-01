@@ -33,7 +33,7 @@
                     <span class="sr-only">Search</span>
                 </button>
                 <div id="search-bar" class="relative hidden md:block mx-3">
-                    <form method="get" action="#" class="flex items-center">
+                    <form method="get" action="{% url 'search' %}" class="flex items-center">
                         <div class="flex">
                             <input type="text" class="input px-2 py-1 border rounded-l-lg focus:outline-none focus:border-blue-500" placeholder="Search..." name="query">
                             <button type="submit" class="button bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-4 rounded-r-lg">Search</button>
@@ -48,7 +48,7 @@
                     </svg>
                 </button>
                 <div class="mt-2">
-                    <a href="{% url 'cart' %}" class="bg-green-500 px-2 py-2 rounded-lg">Cart ([[ numItems ]])</a>
+                    <a href="{% url 'cart' %}" class="bg-green-500 px-2 py-2 rounded-lg">Cart</a>
                 </div>
             </div>
             <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-menu">
@@ -78,10 +78,11 @@
             </div>
         </div>
     </nav>
-    <div class="container pt-20">
+    <section class="container pt-20">
         {% block content %}
-        {% endblock content %}
-    </div>
+        {% endblock %}
+    </section>
+    {% include 'parts/newsletter.html' %}
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {

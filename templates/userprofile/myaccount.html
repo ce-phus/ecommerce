@@ -1,0 +1,62 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+    <h1 class="text-2xl font-bold mb-4 pt-20">My account</h1>
+
+    <a href="{% url 'logout' %}" class="bg-red-500 text-white px-4 py-2 rounded">Log out</a>
+
+    <hr class="my-4">
+
+    <h2 class="text-xl font-semibold mb-2">Account information</h2>
+
+    <p><strong>Name: </strong>{{ request.user.get_full_name }}</p>
+    <p><strong>E-mail: </strong>{{ request.user.email }}</p>
+    <p><strong>Address: </strong>{{ request.user.userprofile.address }}</p>
+    <p><strong>Zip and place: </strong>{{ request.user.userprofile.zipcode }} {{ request.user.userprofile.place }}</p>
+    <p><strong>Phone: </strong>{{ request.user.userprofile.phone }}</p>
+
+    <hr class="my-4">
+
+    <h2 class="text-xl font-semibold mb-2">My orders</h2>
+
+    {% for order in request.user.orders.all %}
+        <article class="border border-gray-300 rounded-lg mb-4">
+            <div class="bg-gray-100 p-4 flex justify-between items-center">
+                <p>{{ order.created_at }}</p>
+                <p><strong>Status: </strong>{{ order.status }}</p>
+            </div>
+
+            <div class="p-4">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-2">Title</th>
+                            <th class="px-4 py-2">Quantity</th>
+                            <th class="px-4 py-2">Price</th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for item in order.items.all %}
+                            <tr>
+                                <td class="px-4 py-2">{{ item.product.title }}</td>
+                                <td class="px-4 py-2">{{ item.quantity }}</td>
+                                <td class="px-4 py-2">{{ item.price }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+
+                    <tfoot class="bg-gray-50">
+                        <tr>
+                            <td class="px-4 py-2 font-semibold">Total</td>
+                            <td class="px-4 py-2">{{ order.get_total_quantity }}</td>
+                            <td class="px-4 py-2">{{ order.paid_amount }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </article>
+    {% empty %}
+        <p>You don't have any orders yet...</p>
+    {% endfor %}
+{% endblock %}

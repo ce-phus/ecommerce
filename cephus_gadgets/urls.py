@@ -19,19 +19,31 @@ from django.urls import path, include
 from apps.core.views import index
 from django.conf import settings
 from django.conf.urls.static import static
-from apps.store.views import category_detail, product_detail
+from apps.store.views import category_detail, product_detail, search
 from apps.store.api import api_remove_from_cart, api_add_to_cart
 from apps.cart.views import cart_detail
+from apps.newsletter.api import api_add_subscriber
+from django.contrib.auth import views
+from apps.userprofile.views import signup, myaccount
 
 
 urlpatterns = [
     path('', index, name='index'),
+    path('search/', search, name='search'),
     path('cart/', cart_detail, name='cart'),
     path('admin/', admin.site.urls),
+
+    # Auth
+
+    path('myaccount/', myaccount, name='myaccount'),
+    path('signup/', signup, name='signup'),
+    path('login/', views.LoginView.as_view(template_name='userprofile/login.html'), name='login'),
+    path('logout/', views.LogoutView.as_view(), name='logout'),
 
     # API
     path('api/add_to_cart/', api_add_to_cart, name='api_add_to_cart'),
     path('api/remove_from_cart/', api_remove_from_cart, name='api_remove_from_cart'),
+    path('api/add_subscriber/', api_add_subscriber, name='api_add_subscriber'),
 
     #Store
     path('<slug:category_slug>/<slug:slug>/', product_detail, name='product_detail'),

@@ -1,7 +1,8 @@
 {% extends 'core/base.html' %}
 {% block title %}{{ category.title }} | {% endblock %}
 {% block content %}
-    <nav class="flex px-5 py-3 text-gray-700 border border-gray-200 rounded-lg bg-gray-50" aria-label="Breadcrumb">
+<div class="pt-20"></div>
+    <nav class="flex px-5 py-3 text-gray-700 border border-gray-200 rounded-lg bg-gray-50" aria-label="Breadcrumb mb-10">
         <ol class="inline-flex item-center space-x-1 md:space-x-2 rtl:space-x-reverse">
             <li class="inline-flex items-center">
                 <a href="{% url 'index' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
@@ -32,7 +33,7 @@
         </ol>
     </nav>
 
-    <h1 class="text-2xl font-bold mb-4">{{ category.title }}</h1>
+    <h1 class="text-2xl font-bold mb-4 pt-10">{{ category.title }}</h1>
 
     {% if category.children.all %}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

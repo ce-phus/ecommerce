@@ -30,7 +30,7 @@ def search(request):
         'sorting': sorting
     }
 
-    return render(request, 'search.html', context)
+    return render(request, 'store/search.html', context)
 
 def product_detail(request, category_slug, slug):
     product = get_object_or_404(Product, slug=slug)

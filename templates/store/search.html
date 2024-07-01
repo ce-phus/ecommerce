@@ -1,0 +1,70 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Search | {% endblock %}
+
+{% block content %}
+    <h1 class="text-2xl font-bold mb-4 pt-20">Search</h1>
+    <h2 class="text-lg mb-4">Search term: "{{ query }}"</h2>
+
+    <hr class="my-4">
+
+    <form method="get" action="{% url 'search' %}">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="mb-6 md:mb-0">
+                <h2 class="text-lg font-semibold mb-2">Query</h2>
+
+                <div class="mb-4">
+                    <label class="block">Search term</label>
+                    <input type="text" name="query" class="input rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 w-full" value="{{ query }}">
+                </div>
+
+                <label class="flex items-center">
+                    <input type="checkbox" name="instock" class="mr-2 leading-tight" {% if instock %}checked="checked"{% endif %}>
+                    <span class="text-sm">In stock</span>
+                </label>
+            </div>
+
+            <div class="mb-6 md:mb-0">
+                <h2 class="text-lg font-semibold mb-2">Price range</h2>
+
+                <div class="mb-4">
+                    <label class="block">From</label>
+                    <input type="number" name="price_from" class="input rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 w-full" value="{{ price_from }}">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block">To</label>
+                    <input type="number" name="price_to" class="input rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 w-full" value="{{ price_to }}">
+                </div>
+            </div>
+
+            <div class="mb-6 md:mb-0">
+                <h2 class="text-lg font-semibold mb-2">Sorting</h2>
+
+                <div class="mb-4">
+                    <label class="block">Select sorting criteria</label>
+                    <div class="relative">
+                        <select name="sorting" class="input rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 w-full">
+                            <option value="-date_added"{% if sorting == '-date_added' %} selected{% endif %}>Newest first</option>
+                            <option value="price"{% if sorting == 'price' %} selected{% endif %}>Price low-high</option>
+                            <option value="-price"{% if sorting == '-price' %} selected{% endif %}>Price high-low</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M10 12l-6-6 1.41-1.41L10 9.17l4.59-4.58L16 6z"/></svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-span-3">
+                <button type="submit" class="button bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">Search</button>
+            </div>
+        </div>
+    </form>
+
+    <hr class="my-4">
+
+    {% with products as list_products %}
+        {% include 'parts/products_list.html' %}
+    {% endwith %}
+{% endblock %}
