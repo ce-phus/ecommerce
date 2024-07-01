@@ -46,7 +46,7 @@
                                             <p class="text-green-500">Already in cart!</p>
                                         {% else %}
                                             {% if product.num_available > 0 %}
-                                                <button @click="addToCart({{ product.id }})" class="bg-green-500 text-white px-4 py-2 rounded">Add to cart</button>
+                                                <button class="update-cart bg-green-500 text-white px-4 py-2 rounded" data-product="{{ product.id }}" data-action="add">Add to cart</button>
                                             {% else %}
                                                 <p class="text-red-500">The product is out of stock!</p>
                                             {% endif %}
@@ -67,7 +67,7 @@
                                                 <p class="text-green-500">Already in cart!</p>
                                             {% else %}
                                                 {% if variant.num_available > 0 %}
-                                                    <button @click="addToCart({{ variant.id }})" class="bg-green-500 text-white px-4 py-2 rounded">Add to cart</button>
+                                                    <button class="update-cart bg-green-500 text-white px-4 py-2 rounded" data-product="{{ variant.id }}" data-action="add">Add to cart</button>
                                                 {% else %}
                                                     <p class="text-red-500">The product is out of stock!</p>
                                                 {% endif %}
@@ -83,14 +83,14 @@
                         <p class="text-green-500">Already in cart!</p>
                     {% else %}
                         {% if product.num_available > 0 %}
-                            <button @click="addToCart({{ product.id }})" class="bg-green-500 text-white px-4 py-2 rounded">Add to cart</button>
+                            <button class="update-cart bg-green-500 text-white px-4 py-2 rounded" data-product="{{ product.id }}" data-action="add">Add to cart</button>
                         {% else %}
                             <p class="text-red-500">The product is out of stock!</p>
                         {% endif %}
                     {% endif %}
                 {% endif %}
 
-                <div class="mt-4 p-4 bg-green-100 text-green-700 rounded" v-if="showMessage">
+                <div class="mt-4 p-4 bg-green-100 text-green-700 rounded" id="cartMessage" style="display: none;">
                     The product was added to the cart!
                 </div>
             </div>
@@ -99,9 +99,11 @@
         {% if product.images.all %}
             <hr class="my-4">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div v-for="image in images" class="cursor-pointer" @click="changeMainImage(image.image)">
-                    <img :src="image.thumbnail" class="w-32 h-32 object-cover">
-                </div>
+                {% for image in product.images.all %}
+                    <div class="cursor-pointer" onclick="changeMainImage('{{ image.image.url }}')">
+                        <img src="{{ image.thumbnail.url }}" class="w-32 h-32 object-cover">
+                    </div>
+                {% endfor %}
             </div>
         {% endif %}
 
@@ -169,74 +171,78 @@
 
 {% block scripts %}
 <script>
-    var store = new Vuex.Store({
-            state: {
-                numItems: {{ cart.get_total_length }},
-                totalCost: {{ cart.get_total_cost }}
-            },
-            mutations: {
-                increment(state, quantity) {
-                    state.numItems += quantity;
-                },
-                changeTotalCost(state, newCost) {
-                    state.totalCost += newCost
-                }
+    var updateBtns = document.getElementsByClassName('update-cart');
+
+    for (var i = 0; i < updateBtns.length; i++) {
+        updateBtns[i].addEventListener('click', function () {
+            var productId = this.dataset.product;
+            var action = this.dataset.action;
+            console.log('productId:', productId, 'Action:', action);
+            console.log('USER:', user);
+
+            if (user == 'AnonymousUser') {
+                addCookieItem(productId, action);
+            } else {
+                updateUserOrder(productId, action);
             }
         });
+    }
 
-    var productapp = new Vue({
-        el: '#productapp',
-        delimeters: ['[[', ']]'],
-        store: store,
-        data () {
-            return {
-                showMessage: false,
-                mainImage: '{{ product.image.url }}',
-                images: [{{ imagesstring|safe }}]
-            }
-        },
-        mounted() {
-            console.log('Mounted');
-        },
-        methods: {
-            changeMainImage(image) {
-                this.mainImage = image;
+    function updateUserOrder(productId, action) {
+        console.log('User is authenticated, sending data...');
+
+        var url = '{% url "api_add_to_cart" %}';
+
+        if (action == 'remove') {
+            url = '{% url "api_remove_from_cart" %}';
+        }
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
             },
-            addToCart(product_id) {
-                console.log('Product_id:', product_id);
+            body: JSON.stringify({ 'product_id': productId, 'update': action == 'add', 'quantity': 1 })
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            // Update the cart icon
+            updateCartIcon(data.cart_total);
+        });
+    }
 
-                var data = {
-                    'product_id': product_id, 
-                    'update': false,
-                    'quantity': 1
-                };
-                    
-                fetch('/api/add_to_cart/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': '{{ csrf_token }}'
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify(data)
-                })
-                .then((response) => {
-                    console.log(response)
+    function addCookieItem(productId, action) {
+        console.log('User is not authenticated');
 
-                    this.showMessage = true
-
-                    store.commit('increment', 1);
-
-                    setTimeout(() => {
-                        this.showMessage = false
-                    }, 2000)
-                })
-                .catch(function (error) {
-                    console.log('Error 2');
-                    console.log(error);
-                })
+        if (action == 'add') {
+            if (cart[productId] == undefined) {
+                cart[productId] = { 'quantity': 1 };
+            } else {
+                cart[productId]['quantity'] += 1;
             }
         }
-    });
+
+        if (action == 'remove') {
+            cart[productId]['quantity'] -= 1;
+
+            if (cart[productId]['quantity'] <= 0) {
+                console.log('Item should be deleted');
+                delete cart[productId];
+            }
+        }
+        console.log('CART:', cart);
+        document.cookie = 'cart=' + JSON.stringify(cart) + ";domain=;path=/";
+
+        location.reload();
+    }
+
+    function changeMainImage(image) {
+        document.querySelector('#productapp img').src = image;
+    }
+
+var user = '{{ request.user.username|escapejs }}';
+var cart = JSON.parse('{{ request.COOKIES.cart|default:"{}"|escapejs }}');
+
 </script>
 {% endblock %}

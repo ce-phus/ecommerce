@@ -1,31 +1,49 @@
 from django.shortcuts import render
 from .cart import Cart
+import json
 
 def cart_detail(request):
     cart = Cart(request)
-    productsstring = ''
+    products = []
 
     for item in cart:
         product = item['product']
-        url = '/%s/%s/' % (product.category.slug, product.slug)
-        b = "{'id': '%s', 'title': '%s', 'price': '%s', 'quantity': '%s', 'total_price': '%s', 'thumbnail': '%s', 'url': '%s', 'num_available': '%s'}," % (product.id, product.title, product.price, item['quantity'], item['total_price'], product.get_thumbnail, url, product.num_available)
+        url = f'/{product.category.slug}/{product.slug}/'
+        product_data = {
+            'id': product.id,
+            'title': product.title,
+            'price': str(product.price),
+            'quantity': item['quantity'],
+            'total_price': str(item['total_price']),
+            'thumbnail': product.get_thumbnail(),  # Call the method to get the URL
+            'url': url,
+            'num_available': product.num_available
+        }
+        products.append(product_data)
 
-        productsstring = productsstring + b
+    productsstring = json.dumps(products)
 
-    # if request.user.is_authenticated:
-    #     pass
-    # else:
-    #     pass
+    if request.user.is_authenticated:
+        first_name = request.user.first_name
+        last_name = request.user.last_name
+        email = request.user.email
+        address = request.user.userprofile.address
+        zipcode = request.user.userprofile.zipcode
+        place = request.user.userprofile.place
+        phone = request.user.userprofile.phone
+    else:
+        first_name = last_name = email = address = zipcode = place = phone = ''
 
-    # context = {
-    #     'cart': cart,
-    #     'first_name': first_name,
-    #     'last_name': last_name,
-    #     'email': email,
-    #     'phone': phone,
-    #     'address': address,
-    #     'zipcode': zipcode,
-    #     'place': place,
-    # }
-        
-        return render(request, 'cart/cart.html')
+    context = {
+        'cart': cart,
+        'productsstring': productsstring,
+        'first_name': first_name,
+        'last_name': last_name,
+        'email': email,
+        'phone': phone,
+        'address': address,
+        'zipcode': zipcode,
+        'place': place,
+    }
+
+    return render(request, 'cart/cart.html', context)

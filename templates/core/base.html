@@ -17,6 +17,70 @@
     <link rel="stylesheet" href="{% static 'src/output.css' %}">
     {% endcompress %}
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script>
+        var user = '{{ request.user }}';
+        var csrftoken = '{{ csrf_token }}';
+
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        var cart = JSON.parse(getCookie('cart'));
+        if (cart == undefined) {
+            cart = {};
+            console.log('Cart Created!', cart);
+            document.cookie = 'cart=' + JSON.stringify(cart) + ";domain=;path=/";
+        }
+        console.log('Cart:', cart);
+
+        function updateCartIcon(numItems) {
+            document.getElementById('cart-total').textContent = numItems;
+        }
+
+        function updateCart(productId, action) {
+            console.log('USER:', user);
+
+            if (user === 'AnonymousUser') {
+                addCookieItem(productId, action);
+            } else {
+                updateUserOrder(productId, action);
+            }
+        }
+
+        function updateUserOrder(productId, action) {
+            console.log('User is authenticated, sending data...');
+
+            var url = '{% url "api_add_to_cart" %}';
+
+            if (action === 'remove') {
+                url = '{% url "api_remove_from_cart" %}';
+            }
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({ 'product_id': productId, 'update': action === 'add', 'quantity': 1 })
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                updateCartIcon(data.cart_total);
+            });
+        }
+    </script>
 </head>
 <body class="bg-white">
     <nav class="fixed top-0 z-50 w-full bg-white border-b border-gray-200" id="navbarapp">
@@ -47,102 +111,66 @@
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/>
                     </svg>
                 </button>
-                <div class="mt-2">
-                    <a href="{% url 'cart' %}" class="bg-green-500 px-2 py-2 rounded-lg">Cart</a>
+                <div class="flex md:order-2">
+                    <a href="{% url 'cart' %}" class="relative">
+                        <svg class="w-6 h-6 text-gray-500 hover:text-gray-700" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"></path>
+                        </svg>
+                        <span id="cart-total" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">0</span>
+                    </a>
                 </div>
             </div>
             <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-menu">
-                <ul class="flex flex-col  md:p-0 sm:p-4 xs:p-4 font-medium border-gray-100 rounded-lg bg-gray-50 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-white">
-                    
-                    <l1 class="md:flex">
+                <ul class="flex flex-col md:p-0 sm:p-4 xs:p-4 font-medium border-gray-100 rounded-lg bg-gray-50 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-white">
+                    <li class="md:flex">
                         {% for category in menu_categories %}
                             {% if not category.children.all %}
-                            <a href="{% url 'category_detail' category.slug %}" class="block  py-2 px-2 ml-2 mr-2 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0">{{ category.title }}</a>
+                                <a href="{% url 'category_detail' category.slug %}" class="block py-2 px-2 ml-2 mr-2 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0">{{ category.title }}</a>
                             {% else %}
-                            <div class="flex">
-                                <a href="{% url 'category_detail' category.slug %}" class="">{{ category.title }}</a>
-                            <svg class="w-2.5 h-2.5 mt-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
-                            </svg>
-                            </div>
-                            <div class="bg-gray-100 flex text-sm rounded-lg focus-ring-4 focus-ring-gray-300 mt-3 flex flex-col" id="dropdown-user-button">
-                                {% for subcategory in category.children.all %}
-                                    <a href="{% url 'category_detail' subcategory.slug %}" class="navbar-item">{{ subcategory.title }}</a>
-                                {% endfor %}
-                            </div>
+                                <div class="flex">
+                                    <a href="{% url 'category_detail' category.slug %}" class="">{{ category.title }}</a>
+                                    <svg class="w-2.5 h-2.5 mt-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1l4 4 4-4"/>
+                                    </svg>
+                                </div>
+                                <div class="w-44 p-5 bg-white rounded-lg shadow absolute z-10 hidden group-hover:block">
+                                    <ul class="space-y-3">
+                                        {% for child in category.children.all %}
+                                            <li>
+                                                <a href="{% url 'category_detail' child.slug %}" class="block py-2 px-2 ml-2 mr-2 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0">{{ child.title }}</a>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
                             {% endif %}
                         {% endfor %}
-                    </l1>
-                    
+                    </li>
                 </ul>
             </div>
         </div>
     </nav>
-    <section class="container pt-20">
+    <section class="container mb-20 pt-20">
         {% block content %}
         {% endblock %}
     </section>
-    {% include 'parts/newsletter.html' %}
+    <footer class="bottom-0 w-full bg-gray-800 text-white py-2 mt-8">
+        <div class="container mx-auto flex justify-between items-center">
+            <p>&copy; {{ year }} Cephus Gadgets. All rights reserved.</p>
+            <p>Designed by Cephus Gadgets</p>
+        </div>
+    </footer>
 
+    
     <script>
+        function updateCartIcon(cartTotal) {
+            document.getElementById('cart-total').textContent = cartTotal;
+        }
+
+        // Update cart icon on page load
         document.addEventListener('DOMContentLoaded', function() {
-            const searchToggleBtn = document.querySelector('[data-collapse-toggle="search-bar"]');
-            const searchInputContainer = document.querySelector('#search-bar');
-
-            searchToggleBtn.addEventListener('click', function() {
-                searchInputContainer.classList.toggle('hidden');
-            });
-
-            const menuToggleBtn = document.querySelector('[data-collapse-toggle="navbar-menu"]');
-            const menuContainer = document.querySelector('#navbar-menu');
-
-            menuToggleBtn.addEventListener('click', function() {
-                menuContainer.classList.toggle('hidden');
-            });
+            updateCartIcon({{ cart_total }});
         });
     </script>
-    <script src="https://unpkg.com/vuex@3.5.1/dist/vuex.js"></script>
-    <script>
-        var store = new Vuex.Store({
-            state: {
-                numItems: {{ cart.get_total_length }},
-                totalCost: {{ cart.get_total_cost }}
-            },
-            mutations: {
-                increment(state, quantity) {
-                    state.numItems += quantity;
-                },
-                changeTotalCost(state, newCost) {
-                    state.totalCost += newCost
-                }
-            }
-        });
-
-        var navbarapp = new Vue({
-            el: '#navbarapp',
-            delimiters: ['[[', ']]'],
-            store: store,
-            data () {
-                return {
-                    menuClass: false
-                }
-            },
-            computed: {
-                numItems: function() {
-                    return store.state.numItems
-                }
-            },
-            methods: {
-                toggleMenu() {
-                    console.log('toggleMenu');
-
-                    this.menuClass = !this.menuClass;
-                }
-            }
-        });
-    </script>
-
-    {% block scripts %}
-    {% endblock %}
 </body>
+
 </html>
