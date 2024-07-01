@@ -169,6 +169,21 @@
 
 {% block scripts %}
 <script>
+    var store = new Vuex.Store({
+            state: {
+                numItems: {{ cart.get_total_length }},
+                totalCost: {{ cart.get_total_cost }}
+            },
+            mutations: {
+                increment(state, quantity) {
+                    state.numItems += quantity;
+                },
+                changeTotalCost(state, newCost) {
+                    state.totalCost += newCost
+                }
+            }
+        });
+
     var productapp = new Vue({
         el: '#productapp',
         delimeters: ['[[', ']]'],

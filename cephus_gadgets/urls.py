@@ -20,11 +20,23 @@ from apps.core.views import index
 from django.conf import settings
 from django.conf.urls.static import static
 from apps.store.views import category_detail, product_detail
+from apps.store.api import api_remove_from_cart, api_add_to_cart
+from apps.cart.views import cart_detail
 
 
 urlpatterns = [
     path('', index, name='index'),
+    path('cart/', cart_detail, name='cart'),
     path('admin/', admin.site.urls),
+
+    # API
+    path('api/add_to_cart/', api_add_to_cart, name='api_add_to_cart'),
+    path('api/remove_from_cart/', api_remove_from_cart, name='api_remove_from_cart'),
+
+    #Store
     path('<slug:category_slug>/<slug:slug>/', product_detail, name='product_detail'),
     path('store/category/<slug:slug>/', category_detail, name='category_detail'),
+
+    
+    
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
