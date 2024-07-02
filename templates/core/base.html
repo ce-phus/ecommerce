@@ -17,7 +17,13 @@
     <link rel="stylesheet" href="{% static 'src/output.css' %}">
     {% endcompress %}
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script
+    src="https://code.jquery.com/jquery-3.7.1.min.js"
+    integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+    crossorigin="anonymous"></script>
+
     <script>
+        console.log("JavaScript is running")
         var user = '{{ request.user }}';
         var csrftoken = '{{ csrf_token }}';
 
@@ -84,7 +90,7 @@
 </head>
 <body class="bg-white">
     <nav class="fixed top-0 z-50 w-full bg-white border-b border-gray-200" id="navbarapp">
-        <div class="flex flex-wrap items-center justify-between mx-auto p-3">
+        <div class="flex flex-wrap items-center justify-between mx-auto p-2">
             <a href="https://flowbite.com/" class="flex items-center space-x-3 rtl:space-x-reverse">
                 <img src="https://flowbite.com/docs/images/logo.svg" class="h-8" alt="Flowbite Logo" />
                 <span class="self-center text-2xl font-semibold whitespace-nowrap">CGadgets</span>
@@ -171,6 +177,8 @@
             updateCartIcon({{ cart_total }});
         });
     </script>
+    {% block scripts %}
+    {% endblock %}
 </body>
 
 </html>

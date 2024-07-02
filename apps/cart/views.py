@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from .cart import Cart
 import json
+from django.conf import settings
 
 def cart_detail(request):
     cart = Cart(request)
@@ -36,6 +37,7 @@ def cart_detail(request):
 
     context = {
         'cart': cart,
+        'cart_total': len(cart),
         'productsstring': productsstring,
         'first_name': first_name,
         'last_name': last_name,
@@ -44,6 +46,13 @@ def cart_detail(request):
         'address': address,
         'zipcode': zipcode,
         'place': place,
+        'pub_key_paypal': settings.PAYPAL_API_KEY_PUBLISHABLE
     }
 
     return render(request, 'cart/cart.html', context)
+
+def success(request):
+    cart = Cart(request)
+    cart.clear()
+
+    return render(request, 'cart/success.html')

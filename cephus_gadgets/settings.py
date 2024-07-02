@@ -10,6 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+PAYPAL_API_KEY_PUBLISHABLE = "AdVgfmsgpWp66OdZE7lF-Zv8Rbx0mXsQYgZ88-AJh3ngRePJh6BuYvqDB4u9ZE_ifIvESThQ-vgaYpuf"
+PAYPAL_API_KEY_HIDDEN = "EEi8NABfvhbeCA-OQAJed1_CCu5Ack6N4dWVeIT8tdqaSZwpxXsgDgLXRK459e6Lwwft-bcij0yBgSNI"
+
 from pathlib import Path
 import os
 

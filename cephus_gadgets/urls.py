@@ -20,8 +20,9 @@ from apps.core.views import index
 from django.conf import settings
 from django.conf.urls.static import static
 from apps.store.views import category_detail, product_detail, search
-from apps.store.api import api_remove_from_cart, api_add_to_cart
-from apps.cart.views import cart_detail
+from apps.store.api import api_remove_from_cart, api_add_to_cart, create_checkout_session
+from apps.cart.views import cart_detail, success
+from apps.coupon.api import api_can_use
 from apps.newsletter.api import api_add_subscriber
 from django.contrib.auth import views
 from apps.userprofile.views import signup, myaccount
@@ -31,6 +32,7 @@ urlpatterns = [
     path('', index, name='index'),
     path('search/', search, name='search'),
     path('cart/', cart_detail, name='cart'),
+    path('success/', success, name='success'),
     path('admin/', admin.site.urls),
 
     # Auth
@@ -41,6 +43,8 @@ urlpatterns = [
     path('logout/', views.LogoutView.as_view(), name='logout'),
 
     # API
+    path('api/can_use/', api_can_use, name='api_can_use'),
+    path('api/create_checkout_session/', create_checkout_session, name='create_checkout_session'),
     path('api/add_to_cart/', api_add_to_cart, name='api_add_to_cart'),
     path('api/remove_from_cart/', api_remove_from_cart, name='api_remove_from_cart'),
     path('api/add_subscriber/', api_add_subscriber, name='api_add_subscriber'),
