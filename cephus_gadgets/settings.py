@@ -10,14 +10,21 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
-PAYPAL_API_KEY_PUBLISHABLE = "AdVgfmsgpWp66OdZE7lF-Zv8Rbx0mXsQYgZ88-AJh3ngRePJh6BuYvqDB4u9ZE_ifIvESThQ-vgaYpuf"
-PAYPAL_API_KEY_HIDDEN = "EEi8NABfvhbeCA-OQAJed1_CCu5Ack6N4dWVeIT8tdqaSZwpxXsgDgLXRK459e6Lwwft-bcij0yBgSNI"
 
 from pathlib import Path
 import os
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+ENV_FILE = BASE_DIR / '.env'
+
+# Initialize environment variables
+env = environ.Env()
+environ.Env.read_env(ENV_FILE)
+
+PAYPAL_API_KEY_PUBLISHABLE = env("PAYPAL_API_KEY_PUBLISHABLE")
+PAYPAL_API_KEY_HIDDEN = env("PAYPAL_API_KEY_HIDDEN")
 
 
 # Quick-start development settings - unsuitable for production
