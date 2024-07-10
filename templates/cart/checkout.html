@@ -1,0 +1,130 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+<div class="untree_co-section pt-20" id="cartapp" v-cloak>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 mb-5 mb-md-0">
+                <h2 class="h3 mb-3 text-black">Billing Details</h2>
+                <div class="p-3 p-lg-5 border bg-white">
+                    <form method="POST">
+                    {% csrf_token %}
+                        <div class="form-group row">
+                        <div class="col-md-6">
+                            <label class="text-black">First Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="first_name" id="first_name" value="{{ first_name }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-black">Last Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="last_name" value="{{ last_name }}">
+                        </div>
+                        </div>
+                        <div class="form-group row">
+                        <div class="col-md-12">
+                            <label class="text-black">Address <span class="text-danger">*</span></label>
+                            <input name="address" type="text" class="form-control" placeholder="Street address" value="{{ address }}">
+                        </div>
+                        </div>
+                        <div class="form-group row">
+                        <div class="col-md-6">
+                            <label class="text-black">State / City<span class="text-danger">*</span></label>
+                            <input name="state" type="text" class="form-control" value="{{ place }}">
+                        </div>
+                        </div>
+                        <div class="form-group row mb-5">
+                        <div class="col-md-6">
+                            <label class="text-black">Email Address <span class="text-danger">*</span></label>
+                            <input class="form-control" name="email" type="email" value="{{ email }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-black">Phone <span class="text-danger">*</span></label>
+                            <input class="form-control" name="phone" type="phone" placeholder="Phone Number" value="{{ phone }}">
+                        </div>
+                        </div>
+                        <div class="form-group">
+                            <button class="btn btn-black btn-lg py-3 btn-block" type="submit">Place Order</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="row mb-5">
+                    <div class="col-md-12">
+                        <h2 class="h3 mb-3 text-black">Your Order Summary</h2>
+                        <div class="p-3 p-lg-5 border bg-white">
+                            <table class="table site-block-order-table mb-5">
+                              <thead>
+                                <th>Product</th>
+                                <th>Total</th>
+                              </thead>
+                              <tbody>
+                              <tr v-for="item in products" :key="item.id">
+                                  <td>[[ item.title ]]<strong class="mx-2">x</strong>[[ item.quantity ]]</td>
+                                  <td>KSH. [[ item.total_price ]]</td>
+                              </tr>
+                              <tr>
+                                  <td class="text-black font-weight-bold"><strong>Cart Subtotal</strong></td>
+                                  <td class="text-black">Ksh [[ totalCost ]]</td>
+                              </tr>
+                              <tr>
+                                  <td class="text-black font-weight-bold"><strong>Order Total</strong></td>
+                                  <td class="text-black font-weight-bold"><strong>Ksh [[ totalCost ]]</strong></td>
+                              </tr>
+                              </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    console.log('Products JSON:', '{{ productsstring|safe }}');
+
+    new Vue({
+        el: "#cartapp",
+        delimiters: ['[[', ']]'],
+        data: {
+            errors: [],
+            products: JSON.parse('{{ productsstring|default:"[]"|safe }}').map(product => ({
+                ...product,
+                total_price: parseFloat(product.total_price) || 0,
+                price: parseFloat(product.price) || 0,
+                quantity: parseInt(product.quantity) || 0
+            })),
+            first_name: '{{ first_name }}',
+            last_name: '{{ last_name }}',
+            email: '{{ email }}',
+            phone: '{{ phone }}',
+            address: '{{ address }}',
+            zipcode: '{{ zipcode }}',
+            place: '{{ place }}',
+            coupon_value: 0,
+            showCouponCodeError: false
+        },
+        computed: {
+            totalItems() {
+                return this.products.reduce((total, product) => total + product.quantity, 0);
+            },
+            totalCost() {
+                const total = this.products.reduce((total, product) => total + product.total_price, 0);
+                return total.toFixed(2);
+            },
+            totalCostWithCoupon() {
+                if (this.coupon_value > 0) {
+                    return this.totalCost * (1 - this.coupon_value / 100);
+                } else {
+                    return this.totalCost;
+                }
+            }
+        },
+        mounted() {
+            console.log("Products data: ", this.products);
+        }
+    });
+</script>
+{% endblock %}

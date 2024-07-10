@@ -29,11 +29,15 @@ class Order(models.Model):
     paid = models.BooleanField(default=False)
     paid_amount = models.FloatField(blank=True, null=True)
     used_coupon = models.CharField(max_length=50, blank=True, null=True)
+    total_cost = models.IntegerField(default=0)
 
     payment_intent = models.CharField(max_length=255)
 
     shipped_date = models.DateTimeField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=ORDERED)
+
+    class Meta:
+        ordering = ('-created_at',)
 
     def __str__(self):
         return '%s' % self.first_name

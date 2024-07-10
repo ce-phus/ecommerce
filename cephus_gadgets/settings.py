@@ -25,7 +25,8 @@ environ.Env.read_env(ENV_FILE)
 
 PAYPAL_API_KEY_PUBLISHABLE = env("PAYPAL_API_KEY_PUBLISHABLE")
 PAYPAL_API_KEY_HIDDEN = env("PAYPAL_API_KEY_HIDDEN")
-
+PAYSTACK_SECRET_KEY= env("PAYSTACK_SECRET_KEY")
+PAYSTACK_PUBLIC_KEY= env("PAYSTACK_PUBLIC_KEY")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -60,6 +61,7 @@ INSTALLED_APPS = [
     'apps.store',
     'apps.userprofile',
     'apps.cart',
+    'apps.payment',
     'crispy_forms',
     'crispy_bootstrap5',
     'compressor'
@@ -107,6 +109,8 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+LOGIN_REDIRECT_URL = '/'
 
 
 # Password validation
