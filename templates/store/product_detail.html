@@ -22,7 +22,7 @@
 
             <div>
                 <h1 class="text-3xl font-bold">{{ product.title }}</h1>
-                <h2 class="text-xl font-semibold mt-2">${{ product.price }}, Stars: {% if product.get_rating == 0 %}No ratings yet{% else %}{{ product.get_rating|floatformat:1 }}{% endif %}</h2>
+                <h2 class="text-xl font-semibold mt-2">KES {{ product.price }}, Stars: {% if product.get_rating == 0 %}No ratings yet{% else %}{{ product.get_rating|floatformat:1 }}{% endif %}</h2>
 
                 {% if product.description %}
                     <p class="mt-4">{{ product.description }}</p>
@@ -46,7 +46,7 @@
                                             <p class="text-green-500">Already in cart!</p>
                                         {% else %}
                                             {% if product.num_available > 0 %}
-                                                <button class="update-cart bg-green-500 text-white px-4 py-2 rounded" data-product="{{ product.id }}" data-action="add">Add to cart</button>
+                                                <button class="update-cart bg-green-500 hover:bg-green-100 text-white px-4 py-2 rounded" data-product="{{ product.id }}" data-action="add">Add to cart</button>
                                             {% else %}
                                                 <p class="text-red-500">The product is out of stock!</p>
                                             {% endif %}

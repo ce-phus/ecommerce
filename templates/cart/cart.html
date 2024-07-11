@@ -11,8 +11,8 @@
             <div v-for="product in products" :key="product.id" class="flex items-center justify-between p-4 border rounded-lg mb-4">
                 <div>
                     <h2 class="font-bold text-lg">[[ product.title ]]</h2>
-                    <p class="text-gray-600">Price: Ksh [[ product.price ]]</p>
-                    <p class="text-gray-600">Total: Ksh [[ product.total_price ]]</p>
+                    <p class="text-gray-600">Price: Ksh [[ product.price ]] ($[[ convertToUSD(product.price) ]])</p>
+                    <p class="text-gray-600">Total: Ksh [[ product.total_price ]] ($[[ convertToUSD(product.total_price) ]])</p>
                     <div class="flex items-center mt-2">
                         <button @click="decrementQuantity(product.id)" class="px-2 py-1 bg-red-500 text-white rounded-lg">-</button>
                         <span class="mx-2">[[ product.quantity ]]</span>
@@ -20,9 +20,6 @@
                         <button @click="removeFromCart(product.id)" class="ml-4 px-2 py-1 bg-red-500 text-white rounded-lg">Remove</button>
                     </div>
                 </div>
-                <!-- <div>
-                    <img :src="product.image.url" alt="Product Image" class=""/>
-                </div> -->
             </div>
             <div class="flex items-center justify-between p-4 border rounded-lg">
                 <input type="text" v-model="coupon_code" placeholder="Coupon Code" class="p-2 border rounded-lg flex-grow">
@@ -35,7 +32,7 @@
             <div class="p-4 border rounded-lg mb-4">
                 <div class="mb-4">
                     <p class="text-lg">Total Items: [[ totalItems ]]</p>
-                    <p class="text-lg">Total Cost: Ksh [[ totalCost ]]</p>
+                    <p class="text-lg">Total Cost: Ksh [[ totalCost ]] ($[[ convertToUSD(totalCost) ]])</p>
                 </div>
                 <form action="{% url 'initiate_payment' %}">
                     <div class="mb-4">
@@ -79,8 +76,6 @@
 <script type="application/javascript" src="https://www.paypal.com/sdk/js?client-id={{ pub_key_paypal }}"></script>
 <script src="https://js.paystack.co/v1/inline.js"></script>
 <script>
-console.log('Products JSON:', '{{ productsstring|safe }}');
-
 new Vue({
     el: '#cartapp',
     delimiters: ['[[', ']]'],
@@ -101,62 +96,12 @@ new Vue({
         place: '{{ place }}',
         coupon_value: 0,
         coupon_code: '',
-        showCouponCodeError: false
+        showCouponCodeError: false,
+        exchangeRate: 0.007  // Example rate: 1 KES = 0.007 USD
     },
     mounted() {
-        const amount = this.totalCostWithCoupon.toString();
-
-        paypal.Buttons({
-            onClick: () => {
-                if (this.validateForm() > 0) {
-                    return false;
-                }
-            },
-            createOrder: function(data, actions) {
-                return actions.order.create({
-                    purchase_units: [{
-                        amount: {
-                            value: amount
-                        }
-                    }]
-                });
-            },
-            onApprove: (data, actions) => {
-                const formdata = {
-                    'first_name': this.first_name,
-                    'last_name': this.last_name,
-                    'email': this.email,
-                    'address': this.address,
-                    'zipcode': this.zipcode,
-                    'place': this.place,
-                    'phone': this.phone,
-                    'coupon_code': this.coupon_code,
-                    'gateway': 'paypal',
-                    'order_id': data.orderID
-                };
-
-                return actions.order.capture().then(function(details) {
-                    fetch('/api/create_checkout_session/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': '{{ csrf_token }}'
-                        },
-                        credentials: 'same-origin',
-                        body: JSON.stringify(formdata)
-                    })
-                    .then(function(response) {
-                        return response.json();
-                    })
-                    .then(function(result) {
-                        window.location.href = '/cart/success/';
-                    })
-                    .catch(function(error) {
-                        console.log('error:', error);
-                    });
-                });
-            }
-        }).render('#paypal-button-container');
+        this.fetchExchangeRate();
+        this.initPayPalButton();
     },
     computed: {
         totalItems() {
@@ -172,6 +117,9 @@ new Vue({
             } else {
                 return this.totalCost;
             }
+        },
+        totalCostInUSD() {
+            return this.convertToUSD(this.totalCostWithCoupon);
         }
     },
     methods: {
@@ -232,7 +180,6 @@ new Vue({
             .then(response => response.json())
             .then(data => {
                 this.products = this.products.filter(p => p.id !== productId);
-                // Update the cart icon or total if necessary
             });
         },
         applyCoupon() {
@@ -254,11 +201,76 @@ new Vue({
                 this.showCouponCodeError = true;
             }
         },
-        buy(paymentMethod) {
-            // Implement the logic to process the payment
-            // and complete the order
+        fetchExchangeRate() {
+            fetch('https://v6.exchangerate-api.com/v6/7500a2933bed28c9880977e7/latest/KES')
+                .then(response => response.json())
+                .then(data => {
+                    this.exchangeRate = data.conversion_rates.USD;
+                })
+                .catch(error=> {
+console.error('Error fetching exchange rate:', error);
+});
+        },
+        convertToUSD(amount) {
+        return (amount * this.exchangeRate).toFixed(2);
+        },
+        initPayPalButton() {
+        paypal.Buttons({
+        onClick: (data, actions) => {
+        if (this.validateForm() > 0) {
+        return false;
         }
-    }
+        },
+        createOrder: (data, actions) => {
+        return actions.order.create({
+        purchase_units: [{
+        amount: {
+        value: this.totalCostInUSD // Use the USD converted amount here
+        }
+        }]
+        });
+        },
+        onApprove: (data, actions) => {
+        const formdata = {
+        'first_name': this.first_name,
+        'last_name': this.last_name,
+        'email': this.email,
+        'address': this.address,
+        'zipcode': this.zipcode,
+        'place': this.place,
+        'phone': this.phone,
+        'coupon_code': this.coupon_code,
+        'gateway': 'paypal',
+        'order_id': data.orderID
+        };
+
+                        return actions.order.capture().then(function(details) {
+                            fetch('/api/create_checkout_session/', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': '{{ csrf_token }}'
+                                },
+                                credentials: 'same-origin',
+                                body: JSON.stringify(formdata)
+                            })
+                            .then(function(response) {
+                                return response.json();
+                            })
+                            .then(function(result) {
+                                window.location.href = '/cart/success/';
+                            })
+                            .catch(function(error) {
+                                console.log('error:', error);
+                            });
+                        });
+                    }
+                }).render('#paypal-button-container');
+            },
+            initiatePaystackPayment() {
+                // Implement Paystack payment initiation logic here
+            }
+        }
 });
 </script>
 {% endblock %}

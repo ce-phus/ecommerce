@@ -1,6 +1,6 @@
 from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
-from apps.order.pdf_utils import render_to_pdf
+from apps.order.views import render_to_pdf
 from django.http import HttpResponse
 
 def decrement_product_quantity(order):
@@ -11,12 +11,12 @@ def decrement_product_quantity(order):
 
 def send_order_confirmation(order):
     subject = 'Order confirmation'
-    from_email = 'noreply@saulgadgets.com'
-    to = ['mail@saulgadgets.com', order.email]
+    from_email = 'noreply@cephusgadgets.com'
+    to = ['mail@cephusgadgets.com', order.email]
     text_content = 'Your order is successful!'
-    html_content = render_to_string('order_confirmation.html', {'order': order})
+    html_content = render_to_string('order/order_confirmation.html', {'order': order})
 
-    pdf = render_to_pdf('order_pdf.html', {'order': order})
+    pdf = render_to_pdf('order/order_pdf.html', {'order': order})
 
     msg = EmailMultiAlternatives(subject, text_content, from_email, to)
     msg.attach_alternative(html_content, "text/html")
