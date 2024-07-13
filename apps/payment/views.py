@@ -116,7 +116,7 @@ def initiate_payment(request):
         else:
             form_errors = form.errors.as_text()
             messages.warning(request, f'Error: Invalid Data. Details: {form_errors}')
-            return redirect('start_order')
+            return redirect('initiate_payment')
     else:
         first_name = request.user.first_name if request.user.is_authenticated else ''
         last_name = request.user.last_name if request.user.is_authenticated else ''
